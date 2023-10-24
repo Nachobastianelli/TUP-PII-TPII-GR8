@@ -1,192 +1,314 @@
 from abc import ABC, abstractmethod
 import random
+import string
 
-estudiantes = []
-profesores = []
-totalCursos = []
+listaEstudiantes = []
+listaProfesores = []
+listaCursos = []
 
 
 class Persona(ABC):
-
-    def __init__(self, nombre: str, apellido: str, email: str, contraseña: str):
-        self._nombre = nombre
-        self._apellido = apellido
-        self._email = email
-        self._contraseña = contraseña
+    def __init__(self, nombre, apellido, email, contraseña):
+        self.nombre = nombre
+        self.apellido = apellido
+        self.email = email
+        self.contraseña = contraseña
 
     @abstractmethod
     def __str__(self) -> str:
-        pass
+        return f"Hola, me llamo {self.nombre} {self.apellido}!"
 
     @abstractmethod
-    def validar_credenciales(self, emailIngresado=None, contraseñaIngresada=None):
+    def validar_credenciales(self, emailValidar=None, contraseñaValidar=None) -> bool:
         pass
 
 
 class Estudiante(Persona):
-    def __init__(self, nombre: str, apellido: str, email: str, contraseña: str, legajo: int, año_inscripcion: int):
+    def __init__(self, nombre, apellido, email, contraseña, añoIngreso):
+        legajo = self.generar_legajo()
         super().__init__(nombre, apellido, email, contraseña)
         self.legajo = legajo
-        self.año_inscripcion = año_inscripcion
-        self.cursos = []
+        self.añoIngreso = añoIngreso
+        self.misCursos = []
 
-    def registro(self):
-        print("Programa de registro de estudiante:\n")
-        nombreEstudiante = str(input("Ingrese su nombre:"))
-        apellidoEstudiante = str(input("Ingrese su apellido"))
-        emailEstudiante = str(input("Ingrese su email"))
+    def generar_legajo(self):
+        return ''.join(random.choice('0123456789') for _ in range(5))
 
-        for estudiante in estudiantes:
-            if emailEstudiante == estudiante.email:
-                print("El email ya fue ingresado. Intentalo de nuevo")
-                return
-
-        contraseñaEstudiante = str(input("Ingrese su contraseña"))
-        def generar_legajo(): return ''.join(random.choice('0123456789')
-                                             for _ in range(5))
-        legajo = generar_legajo()
-        print(f"Su legajo es: {legajo}")
-        año_inscripcionEstudiante = str(
-            input("Ingrese su año de ingreso: (dd/mm/aaaa)"))
-
-        estudiante = Estudiante(nombreEstudiante, apellidoEstudiante, emailEstudiante,
-                                contraseñaEstudiante, legajo, año_inscripcionEstudiante)
-
-        estudiantes.append(estudiante)
-
-    def validar_credenciales(self, emailIngresado=None, contraseñaIngresada=None):
-        if emailIngresado is not None and contraseñaIngresada is not None:
-            for estudiante in estudiantes:
-                if emailIngresado == estudiante.email and contraseñaIngresada == estudiante.contraseña:
+    def validar_credenciales(self, emailValidar=None, contraseñaValidar=None) -> bool:
+        if emailValidar is not None and contraseñaValidar is not None:
+            for estudiante in listaEstudiantes:
+                if emailValidar == estudiante.email and contraseñaValidar == estudiante.contraseña:
+                    print(
+                        f"Inicio de sesión exitoso para el estudiante: {estudiante.nombre} {estudiante.apellido}, con el legajo: {estudiante.legajo}!")
                     return True
-
         return False
 
-    def matricularse(self, opcionCurso):
-        listaCursos = ["Programación I", "Programación II",
-                       "Laboratorio", "InglesI", "InglesII"]
-        encontrado = False
-        for estudiante in estudiantes:
-            if estudiante.cursos == listaCursos[opcionCurso]:
-                print("Ya estas inscripcto en este curso.")
-                encontrado = True
-                return
-            if encontrado == False:
-                estudiante.cursos = + listaCursos[opcionCurso]
-                return
-            """
-                def matricularse(self, curso): Probar esta alternativa si no fucniona arriba
-                    if curso not in self.cursos:
-                    self.cursos.append(curso)
-            """
+    def matricularse(self, curso):
+        if curso in self.misCursos:
+            print("Ya estás matriculado en el curso")
+        else:
+            claveMatricula = input(
+                "Ingrese la clave de matriculación del curso:")
+            if claveMatricula == curso.claveMatriculacion:
+                self.misCursos.append(curso)
+                print("Se ha inscrito con éxito!")
+            else:
+                print("Ingresó una contraseña incorrecta.")
 
-    def mostrarCursos(self, emailCursos):
-        encontrado = False
-        for estudiante in estudiantes:
-            if emailCursos == estudiante.email:
-                encontrado = True
-                return f"Los cursos que esta cursando son: {estudiante.cursos}"
-        if not encontrado:
-            return "No hay ningun email asociado."
-        return "no tiene cursos"
+    def mostrarCursos(self):
+        resultado = "Lista de cursos:\n\n------------\n"
+        i = 1
+        for cursos in self.misCursos:
+            resultado += f"{i}. {cursos}\n-----------\n"
+            i += 1
+        return resultado
 
     def __str__(self) -> str:
-        return f"Estudiante: {self.nombre} {self.apellido}, Legajo: {self.legajo}"
-
-    """def validar_credenciales(self, mail_a_validar, Clave_a_validar):
-        for estudiante in self.estudiantes:
-            pass"""
+        return "Soy un estudiante"
 
 
 class Profesor(Persona):
-    def __init__(self, nombre: str, apellido: str, email: str, contraseña: str, titulo: str, año_graduacion: int):
+    def __init__(self, nombre, apellido, email, contraseña, titulo, añoEsgreso):
         super().__init__(nombre, apellido, email, contraseña)
         self.titulo = titulo
-        self.año_graduacion = año_graduacion
-        self.maestros = []
+        self.añoEsgreso = añoEsgreso
+        self.misCursos = []
 
-    def validar_credenciales(self, emailIngresado=None, contraseñaIngresada=None):
-        pass
+    def validar_credenciales(self, emailValidar=None, contraseñaValidar=None) -> bool:
+        if emailValidar is not None and contraseñaValidar is not None:
+            for profesor in listaProfesores:
+                if emailValidar == profesor.email and contraseñaValidar == profesor.contraseña:
+                    print(
+                        f"Bienvenido {profesor.nombre} {profesor.apellido}!")
+                    return True
+        return False
 
-# Pre-cargamos alumnos y profesores
+    def dictarCursos(self):
+        nombreCurso = input("Ingrese el nombre del curso:")
+        encontrado = next(
+            (curso for curso in listaCursos if curso.nombre == nombreCurso), None)
+
+        if encontrado is None:
+            nuevoCurso = Curso(nombreCurso)
+            nuevoCurso.contraseña()
+            listaCursos.append(nuevoCurso)
+            self.misCursos.append(nuevoCurso)
+            print("Se agregó el curso con éxito")
+        else:
+            print(f"Ya tiene el curso {nombreCurso} cargado en el sistema")
+
+    def mostrarCursos(self):
+        resultado = "Lista de cursos:\n\n------------\n"
+        i = 1
+        for cursos in self.misCursos:
+            resultado += f"{i}. {cursos}\n-----------\n"
+            i += 1
+        return resultado
+
+    def __str__(self) -> str:
+        return "Soy un profesor"
 
 
-estudiantes = Estudiante()
+class Curso():
+    def __init__(self, nombre):
+        self.nombre = nombre
+        self.claveMatriculacion = None
+
+    def __str__(self) -> str:
+        return f"Nombre: {self.nombre}\nClave: {self.claveMatriculacion}"
+
+    def contraseña(self):
+        def generar_contraseña():
+            return ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(8))
+        self.claveMatriculacion = generar_contraseña()
+
+
+# Instanciamientos de clase: profesores
+profesor1 = Profesor("jose luis", "cecarelli", "jose@gmail.com",
+                     "jose123", "docente", "12/01/2019")
+listaProfesores.append(profesor1)
+
+# Estudiantes
+estudiante1 = Estudiante("Ignacio", "Bastianelli",
+                         "nacho@gmail.com", "nacho123", "28/06/2003")
+listaEstudiantes.append(estudiante1)
+
+estudiante2 = Estudiante(
+    "ricardo", "fort", "ricky@gmail.com", "ricky123", "19/09/1999")
+listaEstudiantes.append(estudiante2)
+
+
+def menuAlumno():
+    while True:
+        print("""
+1- Registrarse como estudiante
+2- Ingresar como estudiante
+3- Salir
+        """)
+        opcion = int(input("Ingrese una opción: "))
+
+        if opcion == 1:
+            print("Registro de estudiante:\n ")
+            nombre = input("Nombre: ")
+            apellido = input("Apellido: ")
+            email = input("Correo electronico: ")
+
+            if any(estudiante.email == email for estudiante in listaEstudiantes):
+                print("Ya existe una cuenta asociada a ese correo.")
+            else:
+                contraseña = input("Contraseña: ")
+                añoIngreso = input(
+                    "Año de ingreso: ")
+
+                estudiante = Estudiante(
+                    nombre, apellido, email, contraseña, añoIngreso)
+                listaEstudiantes.append(estudiante)
+                print("Registro exitoso.")
+
+        elif opcion == 2:
+            print("Ingeso de alumno: \n")
+            email = input("Correo electronico: ")
+            contraseña = input("Contraseña: ")
+
+            for estudiante in listaEstudiantes:
+                if estudiante.validar_credenciales(email, contraseña):
+                    opcionAlumno = 0
+                    while opcionAlumno != 3:
+                        print("""
+1- Matricularse a un curso
+2- Ver cursos
+3- Volver al menú principal
+                        """)
+                        opcionAlumno = int(input("Seleccione una opción:\n"))
+                        if opcionAlumno == 1:
+                            if not listaCursos:
+                                print("No hay cursos disponibles")
+                            else:
+                                i = 1
+                                for curso in listaCursos:
+                                    print(f"{i}. {curso}\n")
+                                    i += 1
+                                opcion = int(input("Seleccione un curso: "))
+                                if opcion <= len(listaCursos):
+                                    curso = listaCursos[opcion - 1]
+                                    estudiante.matricularse(curso)
+                                else:
+                                    print(
+                                        "Opción incorrecta. Inténtelo de nuevo...")
+                        elif opcionAlumno == 2:
+                            if not estudiante.misCursos:
+                                print("No estás matriculado en ningún curso.")
+                            else:
+
+                                resultado = estudiante.mostrarCursos()
+                                print(resultado)
+                        elif opcionAlumno == 3:
+                            print("Volviendo al menú principal")
+                        else:
+                            print("Opción incorrecta. Inténtelo de nuevo...")
+
+                    break
+            else:
+                print("Credenciales inválidas")
+
+        elif opcion == 3:
+            print("Saliendo del programa")
+            break
+        else:
+            print("Opción inválida. Inténtelo de nuevo\n")
+
+
+def menuProfesor():
+    while True:
+        print("""
+1- Registrarse como profesor
+2- Ingresar como profesor
+3- Salir
+        """)
+        opcion = int(input("Ingrese una opción: "))
+
+        if opcion == 1:
+            print("Registro de profesor:")
+            nombre = input("Nombre: ")
+            apellido = input("Apellido: ")
+            email = input("Correo electrónico: ")
+
+            if any(profesor.email == email for profesor in listaProfesores):
+                print(
+                    "Ya existe una cuenta con ese correo electrónico. Inténtelo de nuevo...")
+            else:
+                contraseña = input("Contraseña: ")
+                titulo = input("Título universitario: ")
+                añoEgreso = input("Ingrese su año de egreso: ")
+
+                profesor = Profesor(nombre, apellido, email,
+                                    contraseña, titulo, añoEgreso)
+                listaProfesores.append(profesor)
+
+        elif opcion == 2:
+            print("Ingreso de profesor: \n")
+            email = input("Correo electrónico: ")
+            contraseña = input("Contraseña: ")
+
+            for profesor in listaProfesores:
+                if profesor.validar_credenciales(email, contraseña):
+                    opcionProfesor = 0
+                    while opcionProfesor != 3:
+                        print("""
+1- Dictar un curso
+2- Ver cursos
+3- Volver al menú principal
+                        """)
+                        opcionProfesor = int(input("Seleccione una opción:\n"))
+                        if opcionProfesor == 1:
+                            profesor.dictarCursos()
+                        elif opcionProfesor == 2:
+                            if not profesor.misCursos:
+                                print("No tienes cursos disponibles.")
+                            else:
+                                resultado = profesor.mostrarCursos()
+                                print(resultado)
+                        elif opcionProfesor == 3:
+                            print("Volviendo al menú principal")
+                        else:
+                            print("Opción incorrecta. Inténtelo de nuevo...\n")
+                    break
+            else:
+                print("Credenciales inválidas")
+
+        elif opcion == 3:
+            print("Saliendo del programa")
+            break
+        else:
+            print("Opción inválida. Inténtelo de nuevo\n")
 
 
 def menu():
-    opcion = 0
-    while (opcion != 4):
-        opcion = int(input(
-            "Seleccione una de las opciones:\n1- Ingresar como alumno\n2- Ingresar como profesor\n3-Ver cursos\n4-Salir\n"))
+    while True:
+        print("""
+1- Ingresar como alumno
+2- Ingresar como profesor
+3- Ver cursos
+4- Salir del programa
+        """)
+        opcion = int(input("Seleccione una opción:\n"))
 
         if opcion == 1:
-            pass
-
+            menuAlumno()
         elif opcion == 2:
-            pass
-
+            menuProfesor()
         elif opcion == 3:
-            pass
-
-        elif opcion == 4:
-            pass
-
-        else:
-            print("Eligio una opcion incorrecta (1-4). Intentelo de nuevo\n")
-
-
-def menuIngresoAlumno():
-    opcion = 0
-    while opcion != 3:
-        opcion = int(input(
-            "Seleccione una opcion:\n1- Registrarse\n2- Loguearse\n3- Volver al menu principal"))
-        if opcion == 1:
-            estudiantes.registro()
-
-        elif opcion == 2:
-            emailIngresado = str(input("Ingrese su mail"))
-            contraseñaIngresada = str(input("Ingrese su contraseña"))
-            verificar = estudiantes.validar_credenciales(
-                emailIngresado, contraseñaIngresada)
-            if verificar == True:
-                opc = int(input(
-                    "Seleccione una opcion:\n1- Matricularse a un curso\n2- Ver cursos\n 3- Volver al menu principal\n"))
-
-                if opc == 1:
-
-                    opcionCurso = int(input(
-                        "Ingrese una de las opciones:\n1- Programación I\n2- Programación II\n3- Laboratorio\n4- Ingles I\n5- Ingles II\n"))
-                    if opcionCurso == 1:
-                        i = 0
-                    elif opcionCurso == 2:
-                        i = 1
-                    elif opcionCurso == 3:
-                        i = 2
-                    elif opcionCurso == 4:
-                        i = 3
-                    elif opcionCurso == 5:
-                        i = 4
-                    else:
-                        print(
-                            "Selecciono una opcion incorrecta (1-5). Intentelo de nuevo...")
-                    estudiantes.matricularse(i)
-                elif opc == 2:
-                    emailCursos = str(
-                        input("Ingrese el email para ver sus cursos:"))
-                    resultado = estudiantes.mostrarCursos(emailCursos)
-                    print(resultado)
-
-                elif opc == 3:
-                    menu()
-
-                else:
-                    print("Opcion incorrecta (1-3)\nIntentelo de nuevo...\n")
-
+            if not listaCursos:
+                print("Aún no hay cursos disponibles :(")
             else:
-                print("Email o contraseña incorrecta")
-        elif opcion == 3:
-            return menu()
-
+                print("Cursos: \n\n")
+                for i, curso in enumerate(listaCursos, start=1):
+                    print(f"{i}. {curso}")
+        elif opcion == 4:
+            print("Saliendo del programa...")
+            break
         else:
-            print("Opcion incorrecta (1-3). Intentelo de nuevo...\n")
+            print("Opción incorrecta. Inténtelo de nuevo:\n")
+
+
+menu()
