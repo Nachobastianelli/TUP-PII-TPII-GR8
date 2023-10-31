@@ -55,7 +55,7 @@ class Estudiante(Persona):
             else:
                 print("Ingresó una contraseña incorrecta.")
 
-    def mostrarCursos(self):
+    def mostrarCursos(self, email):
         resultado = "Lista de cursos:\n\n------------\n"
         i = 1
         for cursos in self.misCursos:
@@ -200,7 +200,8 @@ def menuAlumno():
                                 print("No estás matriculado en ningún curso.")
                             else:
 
-                                resultado = estudiante.mostrarCursos()
+                                resultado = estudiante.mostrarCursos(
+                                    estudiante.email)
                                 print(resultado)
                         elif opcionAlumno == 3:
                             print("Volviendo al menú principal")
