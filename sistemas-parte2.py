@@ -1,4 +1,17 @@
 from abc import ABC, abstractmethod
+from datetime import datetime
+import random
+import string
+
+
+class Archivo:
+    def __init__(self, nombre, formato, fecha):
+        self.nombre = nombre
+        self.formato = formato
+        self.fecha = fecha
+
+    def __str__(self) -> str:
+        return f"Nombre: {self.nombre}\nFormato: {self.formato}\nFecha: {self.fecha}\n"
 
 
 class Usuario(ABC):
@@ -38,21 +51,57 @@ class Estudiante(Usuario):
 
         for cursos in listaCursos:
             if str(curso) == str(cursos.nombre) and str(curso) not in self.misCursos:
-                contraseña = input("Ingrese la clave de matriculación: ")
-                if contraseña == cursos.contraseñaMatriculacion:
-                    self.misCursos.append(curso)
-                    print("Se añadió con éxito!")
+                if curso in self.misCursos:
+                    print("Ya estás matriculado en este curso.")
                     encontrado = True
+                else:
+                    contraseña = input("Ingrese la clave de matriculación: ")
+                    if contraseña == cursos.contraseñaMatriculacion:
+                        self.misCursos.append(cursos)
+                        print("Se añadió con éxito!")
+                        encontrado = True
         if not encontrado:
             print("Contraseña incorrecta o no existe un curso con ese nombre.")
 
+    def desmatricularCurso(self):
+        if not self.misCursos:
+            print("No está matriculado en ningún curso.")
+            return
+
+        for i, curso in enumerate(self.misCursos, start=1):
+            print(f"Índice: {i}, Curso: {curso}")
+
+        eleccion = int(input("Seleccione un curso para desmatricularse: "))
+        if 1 <= eleccion <= len(self.misCursos):
+            eleccion -= 1
+            cursoDesmatricula = self.misCursos[eleccion]
+            self.misCursos.remove(cursoDesmatricula)
+            print("Se desmatriculó con éxito!")
+        else:
+            print("Seleccionó una opción inválida.")
+
     def mostrarCursos(self):
+        if not self.misCursos:
+            print("No se ha matriculado a ningún curso.")
+            return
+
         resultado = f"{sep}Listado de cursos{sep}\n\n{sep}\n"
         i = 1
-        for cursos in self.misCursos:
-            resultado += f"{i}. {cursos}\n{sep}\n"
+        for curso in self.misCursos:
+            resultado += f"{i}. {curso}\n{sep}\n"
             i += 1
-        return resultado
+        print(resultado)
+        eleccion = int(input("Seleccione uno de los cursos: "))
+        if 1 <= eleccion <= len(self.misCursos):
+            cursoEleccion = self.misCursos[eleccion - 1]
+            if not cursoEleccion.misArchivos:
+                print("El curso no tiene archivos.")
+            else:
+                print("Archivos del curso:")
+                for archivo in cursoEleccion.misArchivos:
+                    print(archivo)
+        else:
+            print("Opción no válida.")
 
 
 class Profesor(Usuario):
@@ -72,33 +121,49 @@ class Profesor(Usuario):
         print("No hay ningún profesor registrado con ese correo.")
         return False
 
-    def dictarCurso(self, curso):
-        nuevoCurso = Curso(curso)
+    def dictarCurso(self, nombre_curso, archivo=None):
+        nuevoCurso = Curso(nombre_curso)
         nuevoCurso.generarContraseña()
         self.misCursos.append(nuevoCurso)
         listaCursos.append(nuevoCurso)
         print("El curso fue añadido con éxito!")
 
+        if archivo:
+            nuevoCurso.nuevoArchivo(archivo)
+
     def mostrarCursos(self):
+        if not self.misCursos:
+            print("No tienes ningun curso")
+            return
         resultado = f"{sep}Listado de cursos{sep}\n\n{sep}\n"
         i = 1
-        for cursos in self.misCursos:
-            resultado += f"{i}. {cursos}\n{sep}\n"
+        for curso in self.misCursos:
+            resultado += f"{i}. {curso}\n{sep}\n"
             i += 1
         print(resultado)
 
 
 class Curso:
+    codigoCurso = 1
+
     def __init__(self, nombre):
         self.nombre = nombre
         self.contraseñaMatriculacion = None
+        self.misArchivos = []
+        self.codigo = Curso.codigoCurso
+        self.codigo_str = f"{self.codigo:05}"
+        Curso.codigoCurso += 1
 
     def __str__(self):
-        return f"Materia: {self.nombre}\nClave: {self.contraseñaMatriculacion}\n"
+        return f"Materia: {self.nombre}\nClave: {self.contraseñaMatriculacion}\nCódigo: {self.codigo_str}"
 
     def generarContraseña(self):
-        contraseña = input("Ingrese la contraseña del curso: ")
+        contraseña = ''.join(random.choice(
+            string.ascii_letters + string.digits) for _ in range(6))
         self.contraseñaMatriculacion = contraseña
+
+    def nuevoArchivo(self, archivo):
+        self.misArchivos.append(archivo)
 
 
 listaEstudiantes = []
@@ -106,7 +171,6 @@ listaProfesores = []
 listaCursos = []
 
 sep = "---" * 15
-
 
 profesorJuan = Profesor("Juan", "Perez", "juan@gmail.com",
                         "juan123", "Docente universitario", 2014)
@@ -130,31 +194,25 @@ listaEstudiantes.append(estudianteDani)
 listaEstudiantes.append(estudianteAgus)
 listaEstudiantes.append(estudianteNacho)
 
-
-def buscar_estudiante(email):
-    for estudiante in listaEstudiantes:
-        if email == estudiante.email:
-            return estudiante
-    return None
+# Código para crear profesores y estudiantes y registrarlos en las listas
 
 
-def registro():  # Todavia no tiene un llamado, hay que probar si funciona...
-
+def registro():
     while True:
         print(f"{sep}Sistema de registros{sep}")
         print("""
 1- Registrar un alumno
 2- Registrar un profesor
-3- Volver al menu principal               
-              """)
-        opcion = int(input("Seleccione una opcion: "))
+3- Volver al menú principal
+        """)
+        opcion = int(input("Seleccione una opción: "))
 
         if opcion == 1:
             print("Registro de estudiante")
-            nombre = str(input("Nombre:"))
-            apellido = str(input("Apellido: "))
-            email = str(input("Email: "))
-            contraseña = str(input("Contraseña: "))
+            nombre = input("Nombre: ")
+            apellido = input("Apellido: ")
+            email = input("Email: ")
+            contraseña = input("Contraseña: ")
             legajo = int(input("Legajo: "))
             añoIngreso = int(input("Año de ingreso: "))
             estudiante = Estudiante(
@@ -163,22 +221,24 @@ def registro():  # Todavia no tiene un llamado, hay que probar si funciona...
 
         elif opcion == 2:
             print("Registro de profesor")
-            nombre = str(input("Nombre:"))
-            apellido = str(input("Apellido: "))
-            email = str(input("Email: "))
-            contraseña = str(input("Contraseña: "))
-            titulo = str(input("Titulo: "))
-            añoEsgreso = input("Año de esgreso: ")
+            nombre = input("Nombre: ")
+            apellido = input("Apellido: ")
+            email = input("Email: ")
+            contraseña = input("Contraseña: ")
+            titulo = input("Título: ")
+            añoEgreso = int(input("Año de egreso: "))
             profesor = Profesor(nombre, apellido, email,
-                                contraseña, titulo, añoEsgreso)
+                                contraseña, titulo, añoEgreso)
             listaProfesores.append(profesor)
 
         elif opcion == 3:
-            print("Volviendo al menu principal...")
+            print("Volviendo al menú principal...")
             break
 
         else:
-            print("Opcion invalida (1-3). Intentelo de nuevo...\n")
+            print("Opción inválida (1-3). Inténtelo de nuevo...")
+
+# Función para mostrar el menú principal
 
 
 def menu():
@@ -189,8 +249,8 @@ def menu():
 3- Ver cursos
 4- Salir del programa
         """)
-        opcion = int(input("Seleccione una opción: "))
-        if opcion == 1:
+        opcion = input("Seleccione una opción: ")
+        if opcion == "1":
             email = input("Email: ")
             contraseña = input("Contraseña: ")
             estudiante = buscar_estudiante(email)
@@ -198,7 +258,7 @@ def menu():
                 menuAlumnos(email)
             else:
                 print("Credenciales inválidas o estudiante no registrado.")
-        elif opcion == 2:
+        elif opcion == "2":
             email = input("Email: ")
             contraseña = input("Contraseña: ")
             profesor = buscar_profesor(email)
@@ -209,7 +269,7 @@ def menu():
                     print("Credenciales inválidas")
             else:
                 print("No se encontró un profesor registrado con ese correo")
-        elif opcion == 3:
+        elif opcion == "3":
             if not listaCursos:
                 print("Aún no hay cursos disponibles :(")
             else:
@@ -218,11 +278,15 @@ def menu():
                 for cursos in listaOrdenada:
                     print(
                         f"Materia: {cursos.nombre}\t\tCarrera: Tecnicatura Universitaria en Programación")
-        elif opcion == 4:
+        elif opcion == "4":
             print("Saliendo del programa...")
             break
+        elif opcion == "admin":
+            registro()
         else:
-            print("Seleccionó una opción incorrecta :( ")
+            print("Seleccionó una opción incorrecta")
+
+# Función para el menú de alumnos
 
 
 def menuAlumnos(email):
@@ -230,19 +294,21 @@ def menuAlumnos(email):
         print(f"{sep}Menu alumnos{sep}")
         print("""
 1- Matricularse a un curso
-2- Ver cursos
-3- Volver al menú principal
+2- Desmatricularse de un curso
+3- Ver cursos matriculados
+4- Volver al menú principal
         """)
         opcion = int(input("Seleccione una opción: "))
         if opcion == 1:
             if not listaCursos:
-                print("Aún no hay cursos disponibles :(")
+                print("Aún no hay cursos disponibles")
             else:
                 i = 1
                 for cursos in listaCursos:
                     print(f"{i}. {cursos.nombre}")
                     i += 1
-                eleccion = int(input("Seleccione una de las opciones: "))
+                eleccion = int(
+                    input("Seleccione un curso para matricularse: "))
                 if 1 <= eleccion <= len(listaCursos):
                     cursoEleccion = listaCursos[eleccion - 1].nombre
                     print(f"El curso elegido es: {cursoEleccion}")
@@ -252,41 +318,94 @@ def menuAlumnos(email):
         elif opcion == 2:
             estudiante = buscar_estudiante(email)
             if estudiante:
-                resultado = estudiante.mostrarCursos()
-                print(resultado)
+                estudiante.desmatricularCurso()
         elif opcion == 3:
+            estudiante = buscar_estudiante(email)
+            if estudiante:
+                estudiante.mostrarCursos()
+        elif opcion == 4:
             print("Volviendo al menú principal...")
             break
         else:
-            print("Ingresó una opción incorrecta (1-3). Inténtelo de nuevo")
+            print("Ingresó una opción incorrecta (1-4). Inténtelo de nuevo")
+
+# Función para el menú de profesores
 
 
 def menuProfesores(email):
+    profesor = buscar_profesor(email)
+    if profesor is None:
+        print("No se encontró un profesor registrado con ese correo.")
+        return
+
     while True:
-        print(f"{sep}Menu profesores{sep}")
+        print(f"{sep}Menú profesor{sep}")
         print("""
-1- Dictar cursos
-2- Ver cursos
+1- Dictar curso
+2- Ver cursos dictados
 3- Volver al menú principal
         """)
+
         opcion = int(input("Seleccione una opción: "))
+
         if opcion == 1:
-            profesor = buscar_profesor(email)
-            if profesor:
-                curso = input("Ingrese el nombre del curso: ")
-                if curso:
-                    profesor.dictarCurso(curso)
-                else:
-                    print("El curso debe contener un nombre.")
+            nombre_curso = input("Ingrese el nombre del curso: ")
+            if nombre_curso:
+                nuevoCurso = Curso(nombre_curso)
+                nuevoCurso.generarContraseña()
+                profesor.misCursos.append(nuevoCurso)
+                listaCursos.append(nuevoCurso)
+                print("El curso fue añadido con éxito!")
+                print(f"Nombre: {nuevoCurso.nombre}")
+                print(f"Código: {nuevoCurso.codigo_str}")
+                print(f"Contraseña: {nuevoCurso.contraseñaMatriculacion}")
+                print(f"Cantidad de archivos: {len(nuevoCurso.misArchivos)}")
+                respuesta = input(
+                    "¿Desea agregar un archivo adjunto (Sí-S / No-N)?").upper()
+                if respuesta == "S":
+                    nombre_archivo = input("Nombre del archivo: ")
+                    formato_archivo = input("Formato del archivo: ")
+                    fecha_archivo = datetime.today()
+                    nuevoArchivo = Archivo(
+                        nombre_archivo, formato_archivo, fecha_archivo)
+                    nuevoCurso.nuevoArchivo(nuevoArchivo)
+                    print("Archivo adjunto añadido con éxito.")
+            else:
+                print("El nombre del curso no puede estar vacío.")
         elif opcion == 2:
-            profesor = buscar_profesor(email)
-            if profesor:
-                profesor.mostrarCursos()
+            if not profesor.misCursos:
+                print("No tiene cursos dictados actualmente.")
+            else:
+                i = 1
+                for curso in profesor.misCursos:
+                    print(f"{i} {curso.nombre}")
+                    i += 1
+                eleccion = int(input("Seleccione un curso: "))
+                if 1 <= eleccion <= len(profesor.misCursos):
+                    cursoEleccion = profesor.misCursos[eleccion - 1]
+                    print(f"Nombre: {cursoEleccion.nombre}")
+                    print(f"Código: {cursoEleccion.codigo_str}")
+                    print(
+                        f"Contraseña: {cursoEleccion.contraseñaMatriculacion}")
+                    print(
+                        f"Cantidad de archivos: {len(cursoEleccion.misArchivos)}")
+                    respuesta = input(
+                        "¿Desea agregar un archivo adjunto (Sí-S / No-N)?").upper()
+                    if respuesta == "S":
+                        nombre_archivo = input("Nombre del archivo: ")
+                        formato_archivo = input("Formato del archivo: ")
+                        fecha_archivo = datetime.today()
+                        nuevoArchivo = Archivo(
+                            nombre_archivo, formato_archivo, fecha_archivo)
+                        cursoEleccion.nuevoArchivo(nuevoArchivo)
+                        print("Archivo adjunto añadido con éxito.")
         elif opcion == 3:
             print("Volviendo al menú principal...")
             break
         else:
             print("Ingresó una opción incorrecta (1-3). Inténtelo de nuevo")
+
+# Funciones para buscar estudiantes y profesores en las listas
 
 
 def buscar_estudiante(email):
